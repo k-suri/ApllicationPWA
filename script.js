@@ -135,3 +135,33 @@ formCancel.addEventListener("click", () => {
   form.classList.remove("show");
 });
 
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', {
+    scope: '/',
+    type: 'module'
+  })
+    .then(function (registration) {
+      console.log('SW Registered:', registration);
+    })
+    .catch(function (error) {
+      console.log('Register Failed:', error);
+    });
+}
+else {
+  console.log('Service workers are not supported.');
+}
+
+
+
+window.addEventListener("offline", function () {
+
+});
+
+
+window.addEventListener("online", function () {
+  loadPosts();
+});
+
+
+
