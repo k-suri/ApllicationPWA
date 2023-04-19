@@ -230,9 +230,6 @@ formSubmit.addEventListener("click", () => {
               },
           ]
       }
-      navigator.serviceWorker.ready.then(registration => {
-          registration.showNotification("Success", options);
-      });
       })
       .catch((error) => {
         console.error("Error: ", error);
