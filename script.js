@@ -39,6 +39,7 @@ if ("serviceWorker" in navigator) {
 }
 
 const addbtn = document.getElementById("add-btn");
+const showbtn = document.getElementById("show-btn");
 const titleFeild = document.getElementById("form-title");
 const descFeild = document.getElementById("form-desc");
 const authorFeild = document.getElementById("form-author");
@@ -49,8 +50,51 @@ const form = document.querySelector(".form-modal");
 let editBtns;
 let deleteBtns;
 let currentBlog = {};
+let latitude;
+let longitude;
 
 let blogsData = [];
+window.addEventListener("load",()=>{
+  addbtn.style.display = "none"
+  const requestPermission = () => {
+    Notification.requestPermission().then((permission) => {
+      console.log(permission)
+      if (permission == "granted") {
+        showbtn.style.display = "none";
+        addbtn.style.display = "block";
+      } else {
+        showbtn.style.display = "block";
+        addbtn.style.display = "none";
+      }
+    });
+  };
+  
+  requestPermission();
+  
+  showbtn.addEventListener("click", () => {
+    requestPermission();
+  });
+
+
+  if ('geolocation' in navigator) {
+    navigator.permissions.query({name:'geolocation'}).then(function(result) {
+      if (result.state === 'granted') {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          latitude = position.coords.latitude;
+          longitude = position.coords.longitude;
+          console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+          addButtons()
+        });
+      } else {
+        console.log('Geolocation permission denied');
+      }
+    });
+  } else {
+    console.log('Geolocation is not supported by this browser');
+  }
+  
+})
+
 
 const dbCollection = collection(db, "blogsData");
 getDocs(dbCollection)
@@ -84,6 +128,9 @@ const renderBlogs = () => {
     const title = document.createElement("h2");
     title.classList.add("blog-title");
     title.textContent = blog.title;
+    const location = document.createElement("p");
+    location.classList.add("location")
+    location.textContent = `Lat: ${latitude} Long: ${longitude}`
     const desc = document.createElement("p");
     desc.classList.add("desc");
     desc.textContent = blog.body;
@@ -173,6 +220,19 @@ formSubmit.addEventListener("click", () => {
         blogsData.push(obj);
         addButtons();
         form.classList.remove("show");
+
+        const options = {
+          body:"Blog Added Successfully",
+          actions:[
+              {
+                  title:"ok",
+                  type:"button"
+              },
+          ]
+      }
+      navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification("Success", options);
+      });
       })
       .catch((error) => {
         console.error("Error: ", error);
@@ -209,8 +269,10 @@ formCancel.addEventListener("click", () => {
   form.classList.remove("show");
 });
 
-window.addEventListener("offline", function () {});
+window.addEventListener("offline", function () {
+
+});
 
 window.addEventListener("online", function () {
-  loadPosts();
+  
 });
