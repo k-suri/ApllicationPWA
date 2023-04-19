@@ -22,6 +22,22 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("sw.js", {
+      scope: "/",
+      type: "module",
+    })
+    .then(function (registration) {
+      console.log("SW Registered:", registration);
+    })
+    .catch(function (error) {
+      console.log("Register Failed:", error);
+    });
+} else {
+  console.log("Service workers are not supported.");
+}
+
 const addbtn = document.getElementById("add-btn");
 const titleFeild = document.getElementById("form-title");
 const descFeild = document.getElementById("form-desc");
@@ -113,22 +129,29 @@ const addButtons = () => {
   deleteBtns = document.querySelectorAll(".delete-btn");
   deleteBtns.forEach((deletebtn) => {
     deletebtn.addEventListener("click", () => {
-      const dbDoc = doc(db, "blogsData", deletebtn.parentElement.parentElement.id);
-      deleteDoc(dbDoc)
-        .then(() => {
-          console.log("Successfully deleted!");
-          let tempArray = [...blogsData];
-          let remainingArray = tempArray.filter(
-            (blog) => blog.id !== deletebtn.parentElement.parentElement.id
-          );
-          blogsData = remainingArray;
-          renderBlogs();
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-        });
+      if (window.confirm("Are you sure you want to delete")) {
+        deleteHandler(deletebtn);
+      }
+      console.log("runs");
     });
   });
+};
+
+const deleteHandler = (deletebtn) => {
+  const dbDoc = doc(db, "blogsData", deletebtn.parentElement.parentElement.id);
+  deleteDoc(dbDoc)
+    .then(() => {
+      console.log("Successfully deleted!");
+      let tempArray = [...blogsData];
+      let remainingArray = tempArray.filter(
+        (blog) => blog.id !== deletebtn.parentElement.parentElement.id
+      );
+      blogsData = remainingArray;
+      addButtons();
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
 };
 
 formSubmit.addEventListener("click", () => {
@@ -185,22 +208,6 @@ formCancel.addEventListener("click", () => {
   currentBlog = {};
   form.classList.remove("show");
 });
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("sw.js", {
-      scope: "/",
-      type: "module",
-    })
-    .then(function (registration) {
-      console.log("SW Registered:", registration);
-    })
-    .catch(function (error) {
-      console.log("Register Failed:", error);
-    });
-} else {
-  console.log("Service workers are not supported.");
-}
 
 window.addEventListener("offline", function () {});
 
